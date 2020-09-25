@@ -1,0 +1,7 @@
+<form (ngSubmit)="workerThread.next(input.value)">
+    <input #input />
+    <button type="submit">Send</button>
+    <button type="button" (click)="workerThread.complete()">Complete</button>
+</form>
+
+{{ workerThread | async | json }}
