@@ -12,7 +12,19 @@ import {WebWorkerModule} from '../web-worker.module';
     },
 })
 export class WebWorkerExecutor {
-    execute<T, R>(fn: WebWorkerFunction<T, R>, options?: WorkerOptions): WebWorker<T, R> {
+    execute<T, R>(fn: WebWorkerFunction<T, R>, data: T): Promise<R> {
+        const worker = this.createWorker(fn);
+        const promise = worker.toPromise();
+
+        worker.next(data);
+
+        return promise;
+    }
+
+    createWorker<T, R>(
+        fn: WebWorkerFunction<T, R>,
+        options?: WorkerOptions,
+    ): WebWorker<T, R> {
         return WebWorker.fromFunction<T, R>(fn, options);
     }
 }

@@ -11,7 +11,7 @@ export class AppComponent {
     public workerThread: WebWorker<string, string>;
 
     constructor(webWorkerExecutor: WebWorkerExecutor) {
-        this.workerThread = webWorkerExecutor.execute((result: string) =>
+        this.workerThread = webWorkerExecutor.createWorker((result: string) =>
             Promise.resolve(`Message from worker: ${result}`),
         );
     }
