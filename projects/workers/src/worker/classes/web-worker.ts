@@ -1,12 +1,12 @@
 import {fromEvent} from 'rxjs';
 import {takeWhile} from 'rxjs/operators';
-import {WebWorkerFunction} from '../types/web-worker-function';
+import {WorkerFunction} from '../types/worker-function';
 import {AnyNextSubject} from './any-next-subject';
 
-export class WebWorker<T, R> extends AnyNextSubject<R> {
+export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
     private worker!: Worker;
 
-    private static createFnUrl(fn: WebWorkerFunction): string {
+    private static createFnUrl(fn: WorkerFunction): string {
         const script = `
 self.addEventListener('message', function(e) {
     var result = ((${fn.toString()}).call(null, e.data));
@@ -28,7 +28,7 @@ self.addEventListener('message', function(e) {
     }
 
     public static fromFunction<T, R>(
-        fn: WebWorkerFunction<T, R>,
+        fn: WorkerFunction<T, R>,
         options?: WorkerOptions,
     ): WebWorker<T, R> {
         return new WebWorker<T, R>(WebWorker.createFnUrl(fn), options);

@@ -7,7 +7,7 @@ import {
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {BrowserModule} from '@angular/platform-browser';
-import {WebWorkerModule} from '@ng-web-apis/workers';
+import {WorkerModule} from '@ng-web-apis/workers';
 import {AppComponent} from './app.component';
 import {AppRoutingModule} from './app.routes';
 
@@ -18,7 +18,7 @@ import {AppRoutingModule} from './app.routes';
         FormsModule,
         BrowserModule.withServerTransition({appId: 'demo'}),
         AppRoutingModule,
-        WebWorkerModule,
+        WorkerModule,
     ],
     declarations: [AppComponent],
     providers: [

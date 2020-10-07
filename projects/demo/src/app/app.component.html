@@ -4,4 +4,4 @@
     <button type="button" (click)="workerThread.complete()">Complete</button>
 </form>
 
-{{ workerThread | async | json }}
+{{ workerThread | async | waWorker: oneMoreFn | async | json }}

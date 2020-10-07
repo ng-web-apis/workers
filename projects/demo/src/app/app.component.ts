@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component} from '@angular/core';
-import {WebWorker, WebWorkerExecutor} from '@ng-web-apis/workers';
+import {WebWorker, WorkerExecutor} from '@ng-web-apis/workers';
 
 @Component({
     selector: 'main',
@@ -10,9 +10,13 @@ import {WebWorker, WebWorkerExecutor} from '@ng-web-apis/workers';
 export class AppComponent {
     public workerThread: WebWorker<string, string>;
 
-    constructor(webWorkerExecutor: WebWorkerExecutor) {
+    constructor(webWorkerExecutor: WorkerExecutor) {
         this.workerThread = webWorkerExecutor.createWorker((result: string) =>
             Promise.resolve(`Message from worker: ${result}`),
         );
+    }
+
+    oneMoreFn(data: any): Promise<any> {
+        return Promise.resolve().then(() => data);
     }
 }
