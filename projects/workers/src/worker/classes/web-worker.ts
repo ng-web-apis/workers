@@ -6,34 +6,6 @@ import {AnyNextSubject} from './any-next-subject';
 export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
     private worker!: Worker;
 
-    private static createFnUrl(fn: WorkerFunction): string {
-        const script = `
-self.addEventListener('message', function(e) {
-    var result = ((${fn.toString()}).call(null, e.data));
-    if(result && [typeof result.then, typeof result.catch].every(function (type) {return type === 'function'})){
-        result.then(function(res){
-            postMessage({result: res});
-        }).catch(function(error){
-            postMessage({error: error});
-        })
-    } else {
-        postMessage(result);
-    }
-});
-        `;
-
-        const blob = new Blob([script], {type: 'text/javascript'});
-
-        return URL.createObjectURL(blob);
-    }
-
-    public static fromFunction<T, R>(
-        fn: WorkerFunction<T, R>,
-        options?: WorkerOptions,
-    ): WebWorker<T, R> {
-        return new WebWorker<T, R>(WebWorker.createFnUrl(fn), options);
-    }
-
     constructor(private url: string, options?: WorkerOptions) {
         super();
 
@@ -62,6 +34,34 @@ self.addEventListener('message', function(e) {
             .subscribe(event => {
                 this.error(event.error);
             });
+    }
+
+    public static fromFunction<T, R>(
+        fn: WorkerFunction<T, R>,
+        options?: WorkerOptions,
+    ): WebWorker<T, R> {
+        return new WebWorker<T, R>(WebWorker.createFnUrl(fn), options);
+    }
+
+    private static createFnUrl(fn: WorkerFunction): string {
+        const script = `
+self.addEventListener('message', function(e) {
+    var result = ((${fn.toString()}).call(null, e.data));
+    if(result && [typeof result.then, typeof result.catch].every(function (type) {return type === 'function'})){
+        result.then(function(res){
+            postMessage({result: res});
+        }).catch(function(error){
+            postMessage({error: error});
+        })
+    } else {
+        postMessage({result: result});
+    }
+});
+        `;
+
+        const blob = new Blob([script], {type: 'text/javascript'});
+
+        return URL.createObjectURL(blob);
     }
 
     complete() {

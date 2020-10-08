@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {inject, InjectFlags, NgModule} from '@angular/core';
+import {NgModule} from '@angular/core';
 import {WorkerPipe} from './pipes/worker.pipe';
 import {WorkerExecutor} from './services/worker-executor.service';
 
@@ -7,15 +7,6 @@ import {WorkerExecutor} from './services/worker-executor.service';
     imports: [CommonModule],
     declarations: [WorkerPipe],
     exports: [WorkerPipe],
-    providers: [
-        {
-            provide: WorkerExecutor,
-            useFactory(): WorkerExecutor {
-                const instance = inject(WorkerExecutor, InjectFlags.Optional);
-
-                return instance || new WorkerExecutor();
-            },
-        },
-    ],
+    providers: [WorkerExecutor],
 })
 export class WorkerModule {}
