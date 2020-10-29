@@ -16,7 +16,7 @@ export class AppComponent {
         );
     }
 
-    oneMoreFn(data: any): Promise<any> {
-        return Promise.resolve().then(() => data);
+    oneMoreFn(data: string): Promise<string> {
+        return Promise.resolve(data);
     }
 }

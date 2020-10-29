@@ -1,4 +1,5 @@
 import {Pipe, PipeTransform} from '@angular/core';
+import {Observable} from 'rxjs';
 import {WebWorker} from '../classes/web-worker';
 import {WorkerExecutor} from '../services/worker-executor.service';
 import {WorkerFunction} from '../types/worker-function';
@@ -11,7 +12,7 @@ export class WorkerPipe implements PipeTransform {
 
     constructor(private workerExecutor: WorkerExecutor) {}
 
-    transform(value: any, fn: WorkerFunction): any {
+    transform<T, R>(value: T, fn: WorkerFunction<T, R>): Observable<R> {
         const worker = this.workers.has(fn)
             ? (this.workers.get(fn) as WebWorker)
             : this.workerExecutor.createWorker(fn);

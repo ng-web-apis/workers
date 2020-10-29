@@ -45,18 +45,24 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
 
     private static createFnUrl(fn: WorkerFunction): string {
         const script = `
-self.addEventListener('message', function(e) {
-    var result = ((${fn.toString()}).call(null, e.data));
-    if(result && [typeof result.then, typeof result.catch].every(function (type) {return type === 'function'})){
-        result.then(function(res){
-            postMessage({result: res});
-        }).catch(function(error){
-            postMessage({error: error});
-        })
-    } else {
-        postMessage({result: result});
+(function(fn){
+    function isFunction(type){
+        return type === 'function';
     }
-});
+
+    self.addEventListener('message', function(e) {
+        var result = fn.call(null, e.data);
+        if(result && [typeof result.then, typeof result.catch].every(isFunction)){
+            result.then(function(res){
+                postMessage({result: res});
+            }).catch(function(error){
+                postMessage({error: error});
+            })
+        } else {
+            postMessage({result: result});
+        }
+    })
+})(${fn.toString()});
         `;
 
         const blob = new Blob([script], {type: 'text/javascript'});

@@ -1,1 +1,1 @@
-export type WorkerFunction<T = any, R = any> = (data: T) => R | PromiseLike<R>;
+export type WorkerFunction<T = any, R = any> = (data: T) => R | Promise<R>;
