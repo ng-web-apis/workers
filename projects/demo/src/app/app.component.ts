@@ -8,7 +8,7 @@ import {WebWorker, WorkerExecutor} from '@ng-web-apis/workers';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-    public workerThread: WebWorker<string, string>;
+    workerThread: WebWorker<string, string>;
 
     constructor(webWorkerExecutor: WorkerExecutor) {
         this.workerThread = webWorkerExecutor.createWorker((result: string) =>
