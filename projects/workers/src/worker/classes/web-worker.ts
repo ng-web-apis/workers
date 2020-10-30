@@ -23,8 +23,6 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
                         this.error(event.data.error);
                     } else if (event.data.hasOwnProperty('result')) {
                         super.next(event.data.result);
-                    } else {
-                        super.next();
                     }
                 }
             });
@@ -77,8 +75,6 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
     }
 
     next(value?: T) {
-        if (!this.isStopped) {
-            this.worker.postMessage(value);
-        }
+        this.worker.postMessage(value);
     }
 }
