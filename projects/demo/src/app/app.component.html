@@ -1,7 +1,10 @@
-<form (ngSubmit)="workerThread.next(input.value)">
-    <input #input />
-    <button type="submit">Send</button>
-    <button type="button" (click)="workerThread.complete()">Complete</button>
-</form>
+<app-clock></app-clock>
 
-{{ workerThread | async | waWorker: oneMoreFn | async | json }}
+<div class="example">
+    <button (click)="workerThread.next()">Run in worker process</button>
+    <p>Execution time: {{ workerThread | async }}</p>
+</div>
+<div class="example">
+    <button (click)="emitter.next()">Run in main process</button>
+    <p>Execution time: {{ result$ | async }}</p>
+</div>
