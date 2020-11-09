@@ -26,9 +26,67 @@ Now install the package:
 npm i @ng-web-apis/workers
 ```
 
-## Usage
+## How it use
 
-TBD
+You can create worker with service and use it in a template with `AsyncPipe`:
+
+```typescript
+import {WorkerExecutor, WebWorker} from '@ng-web-apis/workers';
+
+@Component({
+    template: `
+        Computed Result: {{ worker | async }}
+        <form (ngSubmit)="worker.next(input.value)">
+            <input #input />
+            <button type="submit">Send to worker</button>
+        </form>
+    `,
+})
+class SomeComponent {
+    worker: WebWorker<number, number>;
+
+    construcor(workerExecutor: WorkerExecutor) {
+        this.worker = workerExecutor.createWorker(this.compute);
+    }
+
+    compute(data: number): number {
+        return data ** 2;
+    }
+}
+```
+
+It's the same with `WorkerPipe` only:
+
+```typescript
+import {WorkerModule} from '@ng-web-apis/workers';
+import {NgModule} from '@angular/core';
+
+@NgModule({
+    imports: [WorkerModule],
+    declarations: [SomeComponent],
+})
+class SomeModule {}
+```
+
+```typescript
+import {WorkerExecutor, WebWorker} from '@ng-web-apis/workers';
+import {FormControl} from '@angular/forms';
+
+@Component({
+    template: `
+        Computed Result: {{ control.value | waWorker: changeData | async }}
+
+        <input [formControl]="control" />
+    `,
+})
+class SomeComponent {
+    control = new FormControl('');
+
+    changeData(data: number): number {
+        return `${data} (changed)`;
+    }
+}
+```
 
 ## See also
 
