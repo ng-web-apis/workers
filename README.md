@@ -43,9 +43,9 @@ import {WorkerExecutor, WebWorker} from '@ng-web-apis/workers';
     `,
 })
 class SomeComponent {
-    worker: WebWorker<number, number>;
+    readonly worker: WebWorker<number, number>;
 
-    construcor(workerExecutor: WorkerExecutor) {
+    constructor(workerExecutor: WorkerExecutor) {
         this.worker = workerExecutor.createWorker(this.compute);
     }
 

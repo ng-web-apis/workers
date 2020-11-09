@@ -21,7 +21,7 @@ describe('WebWorker', () => {
         expect((worker as any).worker instanceof Worker).toEqual(true);
     });
 
-    it('should trigger an error if URL not found', async () => {
+    it('should trigger an error if URL was not found', async () => {
         const worker = new WebWorker('some/wrong/url');
 
         await expectAsync(worker.toPromise()).toBeRejected();
