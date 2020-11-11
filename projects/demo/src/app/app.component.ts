@@ -10,9 +10,9 @@ import {map} from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-    workerThread: WebWorker<void, number>;
-    emitter: Subject<void>;
-    result$: Observable<number>;
+    readonly workerThread: WebWorker<void, number>;
+    readonly emitter: Subject<void>;
+    readonly result$: Observable<number>;
 
     constructor(webWorkerExecutor: WorkerExecutor) {
         this.workerThread = webWorkerExecutor.createWorker(this.startCompute);
