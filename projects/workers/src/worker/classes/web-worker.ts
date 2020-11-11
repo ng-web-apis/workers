@@ -1,5 +1,6 @@
 import {fromEvent} from 'rxjs';
 import {takeWhile} from 'rxjs/operators';
+import {WORKER_BLANK_FN} from '../consts/worker-fn-template';
 import {WorkerFunction} from '../types/worker-function';
 import {AnyNextSubject} from './any-next-subject';
 
@@ -42,26 +43,7 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
     }
 
     private static createFnUrl(fn: WorkerFunction): string {
-        const script = `
-(function(fn){
-    function isFunction(type){
-        return type === 'function';
-    }
-
-    self.addEventListener('message', function(e) {
-        var result = fn.call(null, e.data);
-        if(result && [typeof result.then, typeof result.catch].every(isFunction)){
-            result.then(function(res){
-                postMessage({result: res});
-            }).catch(function(error){
-                postMessage({error: error});
-            })
-        } else {
-            postMessage({result: result});
-        }
-    })
-})(${fn.toString()});
-        `;
+        const script = `(${WORKER_BLANK_FN})(${fn.toString()});`;
 
         const blob = new Blob([script], {type: 'text/javascript'});
 
