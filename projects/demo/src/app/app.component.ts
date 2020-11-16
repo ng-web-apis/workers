@@ -21,13 +21,11 @@ export class AppComponent {
     }
 
     startCompute(): number {
-        function compute(num: number): number {
-            return Array.from({length: num}).reduce<number>((sum: number) => sum + 1, 0);
-        }
-
         const start = performance.now();
 
-        Array.from({length: 16000}).forEach((_, index) => compute(index));
+        Array.from({length: 16000}).forEach((_, index) =>
+            Array.from({length: index}).reduce<number>((sum: number) => sum + 1, 0),
+        );
 
         return performance.now() - start;
     }

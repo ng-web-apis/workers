@@ -33,25 +33,21 @@ You can create worker with service and use it in a template with `AsyncPipe`:
 ```typescript
 import {WorkerExecutor, WebWorker} from '@ng-web-apis/workers';
 
+function compute(data: number): number {
+    return data ** 2;
+}
+
 @Component({
     template: `
         Computed Result: {{ worker | async }}
-        <form (ngSubmit)="worker.next(input.value)">
+        <form (ngSubmit)="worker.postMessage(input.value)">
             <input #input />
             <button type="submit">Send to worker</button>
         </form>
     `,
 })
 class SomeComponent {
-    readonly worker: WebWorker<number, number>;
-
-    constructor(workerExecutor: WorkerExecutor) {
-        this.worker = workerExecutor.createWorker(this.compute);
-    }
-
-    compute(data: number): number {
-        return data ** 2;
-    }
+    readonly worker: WebWorker<number, number> = workerExecutor.createWorker(compute);
 }
 ```
 
@@ -74,13 +70,13 @@ import {FormControl} from '@angular/forms';
 
 @Component({
     template: `
-        Computed Result: {{ control.value | waWorker: changeData | async }}
+        Computed Result: {{ value | waWorker: changeData | async }}
 
-        <input [formControl]="control" />
+        <input [(ngModel)]="value" />
     `,
 })
 class SomeComponent {
-    control = new FormControl('');
+    value: string;
 
     changeData(data: number): number {
         return `${data} (changed)`;
