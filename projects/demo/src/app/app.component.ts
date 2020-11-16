@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component} from '@angular/core';
-import {WebWorker, WorkerExecutor} from '@ng-web-apis/workers';
-import {Observable, Subject} from 'rxjs';
+import {WebWorker} from '@ng-web-apis/workers';
+import {Subject} from 'rxjs';
 import {map} from 'rxjs/operators';
 
 @Component({
@@ -10,15 +10,9 @@ import {map} from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-    readonly workerThread: WebWorker<void, number>;
-    readonly emitter: Subject<void>;
-    readonly result$: Observable<number>;
-
-    constructor(webWorkerExecutor: WorkerExecutor) {
-        this.workerThread = webWorkerExecutor.createWorker(this.startCompute);
-        this.emitter = new Subject();
-        this.result$ = this.emitter.pipe(map(this.startCompute));
-    }
+    readonly workerThread = WebWorker.fromFunction<void, number>(this.startCompute);
+    readonly emitter = new Subject<void>();
+    readonly result$ = this.emitter.pipe(map(this.startCompute));
 
     startCompute(): number {
         const start = performance.now();

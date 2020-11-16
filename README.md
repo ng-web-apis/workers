@@ -28,10 +28,10 @@ npm i @ng-web-apis/workers
 
 ## How it use
 
-You can create worker with service and use it in a template with `AsyncPipe`:
+You can create worker and use it in a template with `AsyncPipe`:
 
 ```typescript
-import {WorkerExecutor, WebWorker} from '@ng-web-apis/workers';
+import {WebWorker} from '@ng-web-apis/workers';
 
 function compute(data: number): number {
     return data ** 2;
@@ -47,7 +47,7 @@ function compute(data: number): number {
     `,
 })
 class SomeComponent {
-    readonly worker: WebWorker<number, number> = workerExecutor.createWorker(compute);
+    readonly worker = WebWorker.fromFunction<number, number>(compute);
 }
 ```
 
@@ -78,7 +78,7 @@ import {FormControl} from '@angular/forms';
 class SomeComponent {
     value: string;
 
-    changeData(data: number): number {
+    changeData(data: number): string {
         return `${data} (changed)`;
     }
 }

@@ -1,12 +1,11 @@
 import {take} from 'rxjs/operators';
-import {WorkerExecutor} from '../services/worker-executor.service';
 import {WorkerPipe} from './worker.pipe';
 
 describe('WorkerPipe', () => {
     let pipe: WorkerPipe;
 
     beforeEach(() => {
-        pipe = new WorkerPipe(new WorkerExecutor());
+        pipe = new WorkerPipe();
     });
 
     it('should emit the first value', async () => {

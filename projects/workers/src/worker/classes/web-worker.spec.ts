@@ -58,4 +58,13 @@ describe('WebWorker', () => {
         worker.postMessage('b');
         expect(await promise).toEqual('a');
     });
+
+    it('should run a worker and return a correct data', async () => {
+        const workerPromise: Promise<string> = WebWorker.execute<string, string>(
+            data => Promise.resolve().then(() => data),
+            'some data',
+        );
+
+        expect(await workerPromise).toEqual('some data');
+    }, 10000);
 });

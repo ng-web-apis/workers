@@ -1,5 +1,5 @@
 import {fromEvent, Subject} from 'rxjs';
-import {filter, takeWhile} from 'rxjs/operators';
+import {filter, take, takeWhile} from 'rxjs/operators';
 import {WORKER_BLANK_FN} from '../consts/worker-fn-template';
 import {WorkerFunction} from '../types/worker-function';
 
@@ -40,6 +40,15 @@ export class WebWorker<T = any, R = any> extends Subject<R> {
         options?: WorkerOptions,
     ): WebWorker<T, R> {
         return new WebWorker<T, R>(WebWorker.createFnUrl(fn), options);
+    }
+
+    static execute<T, R>(fn: WorkerFunction<T, R>, data: T): Promise<R> {
+        const worker = WebWorker.fromFunction(fn);
+        const promise = worker.pipe(take(1)).toPromise();
+
+        worker.postMessage(data);
+
+        return promise;
     }
 
     private static createFnUrl(fn: WorkerFunction): string {
