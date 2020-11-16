@@ -21,16 +21,18 @@ describe('WebWorker', () => {
         expect((worker as any).worker instanceof Worker).toEqual(true);
     });
 
-    it('should trigger an error if URL not found', async () => {
+    it('should trigger an error if URL was not found', async () => {
         const worker = new WebWorker('some/wrong/url');
 
         await expectAsync(worker.toPromise()).toBeRejected();
     });
 
     it('should fail if an inner promise is rejected', async () => {
-        const worker = WebWorker.fromFunction(() => Promise.reject('reason'));
+        const worker = WebWorker.fromFunction<void, string>(() =>
+            Promise.reject('reason'),
+        );
 
-        worker.next();
+        worker.postMessage();
 
         await expect(await worker.toPromise().catch(err => err)).toEqual('reason');
     });
@@ -52,8 +54,8 @@ describe('WebWorker', () => {
             })
             .toPromise();
 
-        worker.next('a');
-        worker.next('b');
+        worker.postMessage('a');
+        worker.postMessage('b');
         expect(await promise).toEqual('a');
     });
 });

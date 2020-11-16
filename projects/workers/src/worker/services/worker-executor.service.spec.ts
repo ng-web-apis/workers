@@ -30,7 +30,7 @@ describe('WorkerExecutorService', () => {
 
         const workerPromise = thread.pipe(take(1)).toPromise();
 
-        thread.next('some data');
+        thread.postMessage('some data');
 
         expect(await workerPromise).toEqual('some data');
     }, 10000);

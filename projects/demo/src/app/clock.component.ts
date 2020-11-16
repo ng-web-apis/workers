@@ -5,14 +5,10 @@ import {map} from 'rxjs/operators';
 @Component({
     selector: 'app-clock',
     template: `
-        {{ date | async | date: 'mediumTime' }}
+        {{ date$ | async | date: 'mediumTime' }}
     `,
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ClockComponent {
-    date: Observable<number>;
-
-    constructor() {
-        this.date = timer(0, 1000).pipe(map(() => Date.now()));
-    }
+    readonly date$: Observable<number> = timer(0, 1000).pipe(map(() => Date.now()));
 }

@@ -1,9 +1,9 @@
-import {fromEvent} from 'rxjs';
-import {takeWhile} from 'rxjs/operators';
+import {fromEvent, Subject} from 'rxjs';
+import {filter, takeWhile} from 'rxjs/operators';
+import {WORKER_BLANK_FN} from '../consts/worker-fn-template';
 import {WorkerFunction} from '../types/worker-function';
-import {AnyNextSubject} from './any-next-subject';
 
-export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
+export class WebWorker<T = any, R = any> extends Subject<R> {
     private worker!: Worker;
 
     constructor(private url: string, options?: WorkerOptions) {
@@ -16,14 +16,15 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
         }
 
         fromEvent<MessageEvent>(this.worker, 'message')
-            .pipe(takeWhile(() => !this.isStopped))
+            .pipe(
+                takeWhile(() => !this.isStopped),
+                filter(event => !!event.data),
+            )
             .subscribe(event => {
-                if (event.data) {
-                    if (event.data.hasOwnProperty('error')) {
-                        this.error(event.data.error);
-                    } else if (event.data.hasOwnProperty('result')) {
-                        super.next(event.data.result);
-                    }
+                if (event.data.hasOwnProperty('error')) {
+                    this.error(event.data.error);
+                } else if (event.data.hasOwnProperty('result')) {
+                    super.next(event.data.result);
                 }
             });
 
@@ -34,7 +35,7 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
             });
     }
 
-    public static fromFunction<T, R>(
+    static fromFunction<T, R>(
         fn: WorkerFunction<T, R>,
         options?: WorkerOptions,
     ): WebWorker<T, R> {
@@ -42,26 +43,7 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
     }
 
     private static createFnUrl(fn: WorkerFunction): string {
-        const script = `
-(function(fn){
-    function isFunction(type){
-        return type === 'function';
-    }
-
-    self.addEventListener('message', function(e) {
-        var result = fn.call(null, e.data);
-        if(result && [typeof result.then, typeof result.catch].every(isFunction)){
-            result.then(function(res){
-                postMessage({result: res});
-            }).catch(function(error){
-                postMessage({error: error});
-            })
-        } else {
-            postMessage({result: result});
-        }
-    })
-})(${fn.toString()});
-        `;
+        const script = `(${WORKER_BLANK_FN})(${fn.toString()});`;
 
         const blob = new Blob([script], {type: 'text/javascript'});
 
@@ -74,7 +56,7 @@ export class WebWorker<T = any, R = any> extends AnyNextSubject<R> {
         super.complete();
     }
 
-    next(value?: T) {
+    postMessage(value: T) {
         this.worker.postMessage(value);
     }
 }

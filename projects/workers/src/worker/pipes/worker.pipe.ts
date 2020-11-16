@@ -13,13 +13,11 @@ export class WorkerPipe implements PipeTransform {
     constructor(private workerExecutor: WorkerExecutor) {}
 
     transform<T, R>(value: T, fn: WorkerFunction<T, R>): Observable<R> {
-        const worker = this.workers.has(fn)
-            ? (this.workers.get(fn) as WebWorker)
-            : this.workerExecutor.createWorker(fn);
+        const worker = this.workers.get(fn) || this.workerExecutor.createWorker(fn);
 
         this.workers.set(fn, worker);
 
-        worker.next(value);
+        worker.postMessage(value);
 
         return worker;
     }

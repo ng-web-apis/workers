@@ -5,11 +5,11 @@ import {WorkerFunction} from '../types/worker-function';
 
 @Injectable()
 export class WorkerExecutor {
-    execute<T, R>(fn: WorkerFunction<T, R>, data?: T): Promise<R> {
+    execute<T, R>(fn: WorkerFunction<T, R>, data: T): Promise<R> {
         const worker = this.createWorker(fn);
         const promise = worker.pipe(take(1)).toPromise();
 
-        worker.next(data);
+        worker.postMessage(data);
 
         return promise;
     }

@@ -10,9 +10,9 @@ import {map} from 'rxjs/operators';
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-    workerThread: WebWorker<void, number>;
-    emitter: Subject<void>;
-    result$: Observable<number>;
+    readonly workerThread: WebWorker<void, number>;
+    readonly emitter: Subject<void>;
+    readonly result$: Observable<number>;
 
     constructor(webWorkerExecutor: WorkerExecutor) {
         this.workerThread = webWorkerExecutor.createWorker(this.startCompute);
@@ -21,13 +21,11 @@ export class AppComponent {
     }
 
     startCompute(): number {
-        function compute(num: number): number {
-            return Array.from({length: num}).reduce<number>((sum: number) => sum + 1, 0);
-        }
-
         const start = performance.now();
 
-        Array.from({length: 16000}).forEach((_, index) => compute(index));
+        Array.from({length: 16000}).forEach((_, index) =>
+            Array.from({length: index}).reduce<number>((sum: number) => sum + 1, 0),
+        );
 
         return performance.now() - start;
     }

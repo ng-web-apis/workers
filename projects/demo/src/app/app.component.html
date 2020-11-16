@@ -1,7 +1,7 @@
 <app-clock></app-clock>
 
 <div class="example">
-    <button (click)="workerThread.next()">Run in worker process</button>
+    <button (click)="workerThread.postMessage()">Run in worker process</button>
     <p>Execution time: {{ workerThread | async }}</p>
 </div>
 <div class="example">
