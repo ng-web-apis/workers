@@ -1,4 +1,5 @@
 import {Observable} from 'rxjs';
+import {take} from 'rxjs/operators';
 import {WebWorker} from './web-worker';
 
 describe('WebWorker', () => {
@@ -64,6 +65,18 @@ describe('WebWorker', () => {
             data => Promise.resolve().then(() => data),
             'some data',
         );
+
+        expect(await workerPromise).toEqual('some data');
+    }, 10000);
+
+    it('should create worker', async () => {
+        const thread = WebWorker.fromFunction<string, string>(data =>
+            Promise.resolve(data),
+        );
+
+        const workerPromise = thread.pipe(take(1)).toPromise();
+
+        thread.postMessage('some data');
 
         expect(await workerPromise).toEqual('some data');
     }, 10000);
