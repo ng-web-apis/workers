@@ -1,38 +1,43 @@
-import {fromEvent, Subject} from 'rxjs';
-import {filter, take, takeWhile} from 'rxjs/operators';
+import {fromEvent, Observable} from 'rxjs';
+import {take, takeWhile} from 'rxjs/operators';
 import {WORKER_BLANK_FN} from '../consts/worker-fn-template';
+import {TypedMessageEvent} from '../types/typed-message-event';
 import {WorkerFunction} from '../types/worker-function';
 
-export class WebWorker<T = any, R = any> extends Subject<R> {
-    private worker!: Worker;
+export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>> {
+    private worker: Worker;
+    private url: string;
 
-    constructor(private url: string, options?: WorkerOptions) {
-        super();
+    constructor(url: string, options?: WorkerOptions) {
+        let worker!: Worker;
+        let error: any;
 
         try {
-            this.worker = new Worker(url, options);
+            worker = new Worker(url, options);
         } catch (e) {
-            this.error(e);
+            error = e;
         }
 
-        fromEvent<MessageEvent>(this.worker, 'message')
-            .pipe(
-                takeWhile(() => !this.isStopped),
-                filter(event => !!event.data),
-            )
-            .subscribe(event => {
-                if (event.data.hasOwnProperty('error')) {
-                    this.error(event.data.error);
-                } else if (event.data.hasOwnProperty('result')) {
-                    super.next(event.data.result);
-                }
-            });
+        super(subscriber => {
+            if (error) {
+                subscriber.error(error);
+            }
 
-        fromEvent<ErrorEvent>(this.worker, 'error')
-            .pipe(takeWhile(() => !this.isStopped))
-            .subscribe(event => {
-                this.error(event.error);
-            });
+            fromEvent<TypedMessageEvent<R>>(this.worker, 'message')
+                .pipe(takeWhile(() => !subscriber.closed))
+                .subscribe(event => {
+                    subscriber.next(event);
+                });
+
+            fromEvent<ErrorEvent>(this.worker, 'error')
+                .pipe(takeWhile(() => !subscriber.closed))
+                .subscribe(event => {
+                    subscriber.error(event);
+                });
+        });
+
+        this.worker = worker;
+        this.url = url;
     }
 
     static fromFunction<T, R>(
@@ -42,7 +47,10 @@ export class WebWorker<T = any, R = any> extends Subject<R> {
         return new WebWorker<T, R>(WebWorker.createFnUrl(fn), options);
     }
 
-    static execute<T, R>(fn: WorkerFunction<T, R>, data: T): Promise<R> {
+    static execute<T, R>(
+        fn: WorkerFunction<T, R>,
+        data: T,
+    ): Promise<TypedMessageEvent<R>> {
         const worker = WebWorker.fromFunction(fn);
         const promise = worker.pipe(take(1)).toPromise();
 
@@ -52,17 +60,16 @@ export class WebWorker<T = any, R = any> extends Subject<R> {
     }
 
     private static createFnUrl(fn: WorkerFunction): string {
-        const script = `(${WORKER_BLANK_FN})(${fn.toString()});`;
+        const script = `(${WORKER_BLANK_FN})(${fn});`;
 
         const blob = new Blob([script], {type: 'text/javascript'});
 
         return URL.createObjectURL(blob);
     }
 
-    complete() {
+    terminate() {
         this.worker.terminate();
         URL.revokeObjectURL(this.url);
-        super.complete();
     }
 
     postMessage(value: T) {

@@ -1,5 +1,5 @@
 import {ChangeDetectionStrategy, Component} from '@angular/core';
-import {WebWorker} from '@ng-web-apis/workers';
+import {toData, WebWorker} from '@ng-web-apis/workers';
 import {Subject} from 'rxjs';
 import {map} from 'rxjs/operators';
 
@@ -11,6 +11,7 @@ import {map} from 'rxjs/operators';
 })
 export class AppComponent {
     readonly workerThread = WebWorker.fromFunction<void, number>(this.startCompute);
+    readonly workerData$ = this.workerThread.pipe(toData());
     readonly emitter = new Subject<void>();
     readonly result$ = this.emitter.pipe(map(this.startCompute));
 

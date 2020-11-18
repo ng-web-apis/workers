@@ -1,6 +1,10 @@
 import {Observable} from 'rxjs';
 import {take} from 'rxjs/operators';
+import {TypedMessageEvent} from '../types/typed-message-event';
 import {WebWorker} from './web-worker';
+
+// it is needed to ignore web worker errors
+window.onerror = () => {};
 
 describe('WebWorker', () => {
     it('should fail if a worker is not available', async () => {
@@ -28,16 +32,6 @@ describe('WebWorker', () => {
         await expectAsync(worker.toPromise()).toBeRejected();
     });
 
-    it('should fail if an inner promise is rejected', async () => {
-        const worker = WebWorker.fromFunction<void, string>(() =>
-            Promise.reject('reason'),
-        );
-
-        worker.postMessage();
-
-        await expect(await worker.toPromise().catch(err => err)).toEqual('reason');
-    });
-
     it('should resolve the last value before completing', async () => {
         const worker = WebWorker.fromFunction((data: string) => Promise.resolve(data));
 
@@ -45,9 +39,9 @@ describe('WebWorker', () => {
             .pipe(source => {
                 return new Observable(subscriber => {
                     source.subscribe({
-                        next(value: string) {
-                            (source as WebWorker).complete();
-                            subscriber.next(value);
+                        next({data}: TypedMessageEvent<string>) {
+                            (source as WebWorker).terminate();
+                            subscriber.next(data);
                             subscriber.complete();
                         },
                     });
@@ -61,12 +55,12 @@ describe('WebWorker', () => {
     });
 
     it('should run a worker and return a correct data', async () => {
-        const workerPromise: Promise<string> = WebWorker.execute<string, string>(
-            data => Promise.resolve().then(() => data),
-            'some data',
-        );
+        const workerPromise: Promise<TypedMessageEvent<string>> = WebWorker.execute<
+            string,
+            string
+        >(data => Promise.resolve().then(() => data), 'some data');
 
-        expect(await workerPromise).toEqual('some data');
+        expect((await workerPromise).data).toEqual('some data');
     }, 10000);
 
     it('should create worker', async () => {
@@ -78,6 +72,18 @@ describe('WebWorker', () => {
 
         thread.postMessage('some data');
 
-        expect(await workerPromise).toEqual('some data');
+        expect((await workerPromise).data).toEqual('some data');
     }, 10000);
+
+    it('should fail if an inner promise is rejected', async () => {
+        const worker = WebWorker.fromFunction<void, string>(() =>
+            Promise.reject('reason'),
+        );
+
+        worker.postMessage();
+
+        expect(await worker.toPromise().catch(err => err.message)).toEqual(
+            'Uncaught reason',
+        );
+    });
 });

@@ -2,7 +2,7 @@
 
 <div class="example">
     <button (click)="workerThread.postMessage()">Run in worker process</button>
-    <p>Execution time: {{ workerThread | async }}</p>
+    <p>Execution time: {{ workerData$ | async }}</p>
 </div>
 <div class="example">
     <button (click)="emitter.next()">Run in main process</button>

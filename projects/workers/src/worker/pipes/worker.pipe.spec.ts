@@ -14,7 +14,7 @@ describe('WorkerPipe', () => {
             .pipe(take(1))
             .toPromise();
 
-        expect(result).toEqual('a');
+        expect(await result).toEqual('a');
     });
 
     it('should return the same worker for the same function', async () => {

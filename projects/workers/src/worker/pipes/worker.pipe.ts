@@ -1,6 +1,7 @@
 import {Pipe, PipeTransform} from '@angular/core';
 import {Observable} from 'rxjs';
 import {WebWorker} from '../classes/web-worker';
+import {toData} from '../operators/to-data';
 import {WorkerFunction} from '../types/worker-function';
 
 @Pipe({
@@ -8,14 +9,18 @@ import {WorkerFunction} from '../types/worker-function';
 })
 export class WorkerPipe implements PipeTransform {
     private workers = new WeakMap<WorkerFunction, WebWorker>();
+    private observers = new WeakMap<WebWorker, Observable<any>>();
 
     transform<T, R>(value: T, fn: WorkerFunction<T, R>): Observable<R> {
         const worker = this.workers.get(fn) || WebWorker.fromFunction(fn);
 
         this.workers.set(fn, worker);
-
         worker.postMessage(value);
 
-        return worker;
+        const observer = this.observers.get(worker) || worker.pipe(toData());
+
+        this.observers.set(worker, observer);
+
+        return observer;
     }
 }
