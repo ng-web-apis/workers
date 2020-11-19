@@ -1,15 +1,15 @@
-import {fromEvent, Observable} from 'rxjs';
-import {take, takeWhile} from 'rxjs/operators';
+import {EMPTY, fromEvent, merge, Observable} from 'rxjs';
+import {take, tap} from 'rxjs/operators';
 import {WORKER_BLANK_FN} from '../consts/worker-fn-template';
 import {TypedMessageEvent} from '../types/typed-message-event';
 import {WorkerFunction} from '../types/worker-function';
 
 export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>> {
-    private worker: Worker;
-    private url: string;
+    private readonly worker: Worker | undefined;
+    private readonly url: string;
 
     constructor(url: string, options?: WorkerOptions) {
-        let worker!: Worker;
+        let worker: Worker | undefined;
         let error: any;
 
         try {
@@ -23,17 +23,18 @@ export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>
                 subscriber.error(error);
             }
 
-            fromEvent<TypedMessageEvent<R>>(this.worker, 'message')
-                .pipe(takeWhile(() => !subscriber.closed))
-                .subscribe(event => {
-                    subscriber.next(event);
-                });
+            const eventStream$ = worker
+                ? merge(
+                      fromEvent<TypedMessageEvent<R>>(worker, 'message').pipe(
+                          tap(event => subscriber.next(event)),
+                      ),
+                      fromEvent<ErrorEvent>(worker, 'error').pipe(
+                          tap(event => subscriber.error(event)),
+                      ),
+                  )
+                : EMPTY;
 
-            fromEvent<ErrorEvent>(this.worker, 'error')
-                .pipe(takeWhile(() => !subscriber.closed))
-                .subscribe(event => {
-                    subscriber.error(event);
-                });
+            return eventStream$.subscribe();
         });
 
         this.worker = worker;
@@ -68,11 +69,16 @@ export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>
     }
 
     terminate() {
-        this.worker.terminate();
+        if (this.worker) {
+            this.worker.terminate();
+        }
+
         URL.revokeObjectURL(this.url);
     }
 
     postMessage(value: T) {
-        this.worker.postMessage(value);
+        if (this.worker) {
+            this.worker.postMessage(value);
+        }
     }
 }
