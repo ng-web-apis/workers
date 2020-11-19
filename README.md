@@ -78,7 +78,7 @@ import {FormControl} from '@angular/forms';
 class SomeComponent {
     value: string;
 
-    changeData(data: number): string {
+    changeData(data: string): string {
         return `${data} (changed)`;
     }
 }
