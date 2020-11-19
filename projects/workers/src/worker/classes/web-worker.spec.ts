@@ -12,7 +12,10 @@ describe('WebWorker', () => {
 
         delete (window as any).Worker;
 
-        const worker = WebWorker.fromFunction(d => d);
+        const worker = WebWorker.fromFunction<void, void>(d => d);
+
+        expect(() => worker.terminate()).not.toThrow();
+        expect(() => worker.postMessage()).not.toThrow();
 
         await expectAsync(worker.toPromise()).toBeRejected();
 
