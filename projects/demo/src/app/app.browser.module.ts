@@ -7,8 +7,10 @@ import {
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {BrowserModule} from '@angular/platform-browser';
+import {WorkerModule} from '@ng-web-apis/workers';
 import {AppComponent} from './app.component';
 import {AppRoutingModule} from './app.routes';
+import {ClockComponent} from './clock.component';
 
 @NgModule({
     bootstrap: [AppComponent],
@@ -17,8 +19,9 @@ import {AppRoutingModule} from './app.routes';
         FormsModule,
         BrowserModule.withServerTransition({appId: 'demo'}),
         AppRoutingModule,
+        WorkerModule,
     ],
-    declarations: [AppComponent],
+    declarations: [AppComponent, ClockComponent],
     providers: [
         {
             provide: LocationStrategy,
