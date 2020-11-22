@@ -1,6 +1,6 @@
 {
     "name": "@ng-web-apis/workers",
-    "version": "1.0.0",
+    "version": "0.0.0-development",
     "peerDependencies": {
         "@angular/core": ">=6.0.0",
         "@ng-web-apis/common": ">=1.1.0"
