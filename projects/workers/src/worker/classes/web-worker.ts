@@ -1,4 +1,4 @@
-import {EMPTY, fromEvent, merge, Observable} from 'rxjs';
+import {EMPTY, fromEvent, merge, Observable, Observer} from 'rxjs';
 import {take, tap} from 'rxjs/operators';
 import {WORKER_BLANK_FN} from '../consts/worker-fn-template';
 import {TypedMessageEvent} from '../types/typed-message-event';
@@ -7,6 +7,8 @@ import {WorkerFunction} from '../types/worker-function';
 export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>> {
     private readonly worker: Worker | undefined;
     private readonly url: string;
+    private isStopped: boolean;
+    private observers: Observer<TypedMessageEvent<R>>[];
 
     constructor(url: string, options?: WorkerOptions) {
         let worker: Worker | undefined;
@@ -19,26 +21,33 @@ export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>
         }
 
         super(subscriber => {
+            let eventStream$: Observable<TypedMessageEvent<R> | ErrorEvent> = EMPTY;
+
             if (error) {
                 subscriber.error(error);
-            }
+            } else if (this.isStopped) {
+                subscriber.complete();
+            } else if (worker) {
+                eventStream$ = merge(
+                    fromEvent<TypedMessageEvent<R>>(worker, 'message').pipe(
+                        tap(event => subscriber.next(event)),
+                    ),
+                    fromEvent<ErrorEvent>(worker, 'error').pipe(
+                        tap(event => subscriber.error(event)),
+                    ),
+                );
 
-            const eventStream$ = worker
-                ? merge(
-                      fromEvent<TypedMessageEvent<R>>(worker, 'message').pipe(
-                          tap(event => subscriber.next(event)),
-                      ),
-                      fromEvent<ErrorEvent>(worker, 'error').pipe(
-                          tap(event => subscriber.error(event)),
-                      ),
-                  )
-                : EMPTY;
+                this.observers.push(subscriber);
+            }
 
             return eventStream$.subscribe();
         });
 
         this.worker = worker;
         this.url = url;
+
+        this.isStopped = false;
+        this.observers = [];
     }
 
     static fromFunction<T, R>(
@@ -57,7 +66,11 @@ export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>
 
         worker.postMessage(data);
 
-        return promise;
+        return promise.then(result => {
+            worker.terminate();
+
+            return result;
+        });
     }
 
     private static createFnUrl(fn: WorkerFunction): string {
@@ -69,11 +82,23 @@ export class WebWorker<T = any, R = any> extends Observable<TypedMessageEvent<R>
     }
 
     terminate() {
+        if (this.isStopped) {
+            return;
+        }
+
         if (this.worker) {
             this.worker.terminate();
         }
 
         URL.revokeObjectURL(this.url);
+
+        this.isStopped = true;
+        this.observers.forEach(observer => {
+            if (!observer.closed) {
+                observer.complete();
+            }
+        });
+        this.observers = [];
     }
 
     postMessage(value: T) {
