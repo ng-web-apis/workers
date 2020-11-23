@@ -12,7 +12,8 @@ export class WorkerPipe implements PipeTransform {
     private observers = new WeakMap<WebWorker, Observable<any>>();
 
     transform<T, R>(value: T, fn: WorkerFunction<T, R>): Observable<R> {
-        const worker = this.workers.get(fn) || WebWorker.fromFunction(fn);
+        const worker: WebWorker<T, R> =
+            this.workers.get(fn) || WebWorker.fromFunction(fn);
 
         this.workers.set(fn, worker);
         worker.postMessage(value);

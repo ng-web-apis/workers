@@ -89,4 +89,25 @@ describe('WebWorker', () => {
             'Uncaught reason',
         );
     });
+
+    it('should close all subscriptions, if the worker was terminated', async () => {
+        const worker = WebWorker.fromFunction<void, string>(() => 'some data');
+
+        const subscriptions = [
+            worker.subscribe(),
+            worker.subscribe(),
+            worker.subscribe(),
+        ];
+
+        worker.terminate();
+        expect(subscriptions.map(s => s.closed)).toEqual([true, true, true]);
+    });
+
+    it("shouldn't throw any errors, if the worker was terminated twice", async () => {
+        const worker = WebWorker.fromFunction<void, string>(() => 'some data');
+
+        worker.terminate();
+        worker.terminate();
+        expect(await worker.toPromise()).toBeUndefined();
+    });
 });
