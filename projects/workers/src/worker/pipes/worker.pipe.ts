@@ -1,4 +1,4 @@
-import {Pipe, PipeTransform} from '@angular/core';
+import {OnDestroy, Pipe, PipeTransform} from '@angular/core';
 import {Observable} from 'rxjs';
 import {WebWorker} from '../classes/web-worker';
 import {toData} from '../operators/to-data';
@@ -7,21 +7,35 @@ import {WorkerFunction} from '../types/worker-function';
 @Pipe({
     name: 'waWorker',
 })
-export class WorkerPipe implements PipeTransform {
-    private workers = new WeakMap<WorkerFunction, WebWorker>();
-    private observers = new WeakMap<WebWorker, Observable<any>>();
+export class WorkerPipe implements PipeTransform, OnDestroy {
+    private fn!: WorkerFunction;
+    private worker!: WebWorker;
+    private observer!: Observable<any>;
 
     transform<T, R>(value: T, fn: WorkerFunction<T, R>): Observable<R> {
-        const worker: WebWorker<T, R> =
-            this.workers.get(fn) || WebWorker.fromFunction(fn);
+        if (this.fn !== fn) {
+            this.terminateWorker();
+            this.initNewWorker(fn);
+        }
 
-        this.workers.set(fn, worker);
-        worker.postMessage(value);
+        this.worker.postMessage(value);
 
-        const observer = this.observers.get(worker) || worker.pipe(toData());
+        return this.observer;
+    }
 
-        this.observers.set(worker, observer);
+    ngOnDestroy(): void {
+        this.terminateWorker();
+    }
 
-        return observer;
+    private terminateWorker() {
+        if (this.worker) {
+            this.worker.terminate();
+        }
+    }
+
+    private initNewWorker<T, R>(fn: WorkerFunction<T, R>) {
+        this.fn = fn;
+        this.worker = WebWorker.fromFunction(fn);
+        this.observer = this.worker.pipe(toData());
     }
 }

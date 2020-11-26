@@ -32,4 +32,18 @@ describe('WorkerPipe', () => {
 
         expect(worker).not.toEqual(differentWorker);
     });
+
+    it('should terminate a previous worker', async () => {
+        const worker = await pipe.transform('a', (data: unknown) => data);
+
+        await pipe.transform('a', (data: unknown) => data);
+        await expectAsync(worker.toPromise()).toBeResolved();
+    });
+
+    it('should terminate a worker then a pipe is destroyed', async () => {
+        const worker = await pipe.transform('a', (data: unknown) => data);
+
+        pipe.ngOnDestroy();
+        await expectAsync(worker.toPromise()).toBeResolved();
+    });
 });
