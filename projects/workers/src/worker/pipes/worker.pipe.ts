@@ -14,7 +14,7 @@ export class WorkerPipe implements PipeTransform, OnDestroy {
 
     transform<T, R>(value: T, fn: WorkerFunction<T, R>): Observable<R> {
         if (this.fn !== fn) {
-            this.terminate();
+            this.terminateWorker();
             this.initNewWorker(fn);
         }
 
@@ -24,10 +24,10 @@ export class WorkerPipe implements PipeTransform, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.terminate();
+        this.terminateWorker();
     }
 
-    private terminate() {
+    private terminateWorker() {
         if (this.worker) {
             this.worker.terminate();
         }
