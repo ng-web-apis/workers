@@ -16,9 +16,9 @@ export class WorkerPipe implements PipeTransform, OnDestroy {
         if (this.fn !== fn) {
             this.terminate();
             this.initNewWorker(fn);
-
-            this.worker.postMessage(value);
         }
+
+        this.worker.postMessage(value);
 
         return this.observer;
     }
