@@ -28,7 +28,7 @@ npm i @ng-web-apis/workers
 
 ## How it use
 
-You can create worker and use it in a template with `AsyncPipe`:
+Create a worker and use it in a template with `AsyncPipe`:
 
 ```typescript
 import {WebWorker} from '@ng-web-apis/workers';
@@ -39,7 +39,8 @@ function compute(data: number): number {
 
 @Component({
     template: `
-        Computed Result: {{ worker | async }}
+        Computed Result:
+        <ng-container *ngIf="worker | async as event">{{ event.data }}</ng-container>
         <form (ngSubmit)="worker.postMessage(input.value)">
             <input #input />
             <button type="submit">Send to worker</button>
@@ -48,6 +49,30 @@ function compute(data: number): number {
 })
 class SomeComponent {
     readonly worker = WebWorker.fromFunction<number, number>(compute);
+}
+```
+
+To get data from the worker event, use the toData operator
+
+```typescript
+import {toData, WebWorker} from '@ng-web-apis/workers';
+
+function compute(data: number): number {
+    return data ** 2;
+}
+
+@Component({
+    template: `
+        Computed Result: {{ workerData$ | async }}
+        <form (ngSubmit)="worker.postMessage(input.value)">
+            <input #input />
+            <button type="submit">Send to worker</button>
+        </form>
+    `,
+})
+class SomeComponent {
+    readonly worker = WebWorker.fromFunction<number, number>(compute);
+    readonly workerData$ = this.worker.pipe(toData());
 }
 ```
 
